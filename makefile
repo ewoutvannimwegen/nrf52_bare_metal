@@ -3,7 +3,7 @@ PREFIX := arm-none-eabi-
 CC     := $(TC)/$(PREFIX)gcc
 AS     := $(TC)/$(PREFIX)as
 DUMP   := $(TC)/$(PREFIX)objdump
-SIZE   := $(TC)/$(PREFIX)size
+SIZE   := $(TC)/$(PREFIX)size 
 COPY   := $(TC)/$(PREFIX)objcopy
 
 NRFX   := /media/hdd/dev/nrfx
@@ -32,7 +32,7 @@ CFLAGS := $(MFLAGS) $(C_INC) -ffunction-sections -fdata-sections \
 		  -O0 -g -Wall -std=gnu99 -c 
 LFLAGS := $(MFLAGS) -T $(LSCRIPT) $(L_LIB) -nodefaultlibs -nolibc -nostdlib -fno-builtin -fno-strict-aliasing -static
 
-.PHONY: all $(PROGRAM) dump flash clean format
+.PHONY: all $(PROGRAM) dump flash clean format bdbg dbg attach
 
 all: $(PROGRAM)
 
@@ -54,13 +54,21 @@ dump:
 	@$(DUMP) -D $(PROGRAM)
 
 clean:
-	rm *.o *.elf *.hex *.bin $(PROGRAM)
+	@rm *.o *.elf *.hex *.bin $(PROGRAM)
 
 format:
-	clang-format -style=llvm -dump-config > .clang-format
-	clang-format -i *.c
+	@clang-format -style=llvm -dump-config > .clang-format
+	@clang-format -i *.c
 
 flash:
-	nrfjprog -f NRF52 --program $(PROGRAM).hex --chiperase --verify
-	nrfjprog -f NRF52 --reset
+	@nrfjprog -f NRF52 --program $(PROGRAM).hex --chiperase --verify
+	@nrfjprog -f NRF52 --reset
 
+attach:
+	@openocd -f openocd.cfg
+
+dbg:
+	arm-none-eabi-gdb -x init.gdb --args blinky
+
+bdbg:
+	arm-none-eabi-gdb --batch -x init.gdb --args blinky
