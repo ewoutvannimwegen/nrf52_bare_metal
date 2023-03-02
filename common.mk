@@ -36,7 +36,7 @@ L_LIB := -L $(NRFX)/mdk
 
 MFLAGS := -mcpu=cortex-m4 -mthumb -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16 -D NRF52
 CFLAGS := $(MFLAGS) $(C_INC) -ffunction-sections -fdata-sections \
-		  -O0 -g -Wall -std=gnu99 -c 
+		  -O0 -gdwarf-2 -g3 -Wall -std=gnu99 -c 
 LFLAGS := $(MFLAGS) -T $(LSCRIPT) $(L_LIB) -nodefaultlibs -nolibc -nostdlib \
 		  -fno-builtin -fno-strict-aliasing -static
 

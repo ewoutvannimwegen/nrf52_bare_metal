@@ -21,7 +21,6 @@ void led_init()
 int main(void)
 {
     led_init();
-
     while (1)
     {
         uint32_t volatile tmo;
