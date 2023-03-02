@@ -5,7 +5,7 @@ load
 echo Note: attached GDB\n
 set breakpoint pending on
 
-break blinky.c:26
+break main
 commands
 echo Note: breakpoint hit\n
 continue

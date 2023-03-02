@@ -1,25 +1,32 @@
-TC     := $(HOME)/tools/arm/gcc-arm-none-eabi-10.3-2021.10/bin
+TC     ?= $(HOME)/tools/arm/gcc-arm-none-eabi-10.3-2021.10/bin
 PREFIX := arm-none-eabi-
 CC     := $(TC)/$(PREFIX)gcc
 AS     := $(TC)/$(PREFIX)as
 DUMP   := $(TC)/$(PREFIX)objdump
 SIZE   := $(TC)/$(PREFIX)size 
 COPY   := $(TC)/$(PREFIX)objcopy
+GDB    := $(TC)/$(PREFIX)gdb
 
 NRFX   := /media/hdd/dev/nrfx
 CMSIS  := /media/hdd/dev/CMSIS_5
+WORK   := /media/hdd/utwente/master/embedded_ai/prod/nrf52_v2_1/bare_metal
+
+OCD_CFG := $(WORK)/openocd.cfg
+GDB_CFG := $(WORK)/init.gdb
 
 STARTUP := $(NRFX)/mdk/gcc_startup_nrf52.S
 LSCRIPT := $(NRFX)/mdk/nrf52832_xxaa.ld 
-PROGRAM := blinky
 
-C_SRC := blinky.c \
-		 $(NRFX)/mdk/system_nrf52.c
+PROGRAM ?= $(WORK)/blinky
 
-A_SRC := $(STARTUP) 
+C_SRC := $(NRFX)/mdk/system_nrf52.c \
+		 $(wildcard *.c) 
+
+A_SRC := $(STARTUP) \
+		 $(wildcard *.s) \
+		 $(wildcard *.S) \
 
 OBJ := $(C_SRC:%.c=%.o) $(A_SRC:%.s=%.o) 
-
 C_INC := -I $(NRFX) \
 		 -I $(NRFX)/hal \
 		 -I $(NRFX)/mdk \
@@ -30,9 +37,10 @@ L_LIB := -L $(NRFX)/mdk
 MFLAGS := -mcpu=cortex-m4 -mthumb -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16 -D NRF52
 CFLAGS := $(MFLAGS) $(C_INC) -ffunction-sections -fdata-sections \
 		  -O0 -g -Wall -std=gnu99 -c 
-LFLAGS := $(MFLAGS) -T $(LSCRIPT) $(L_LIB) -nodefaultlibs -nolibc -nostdlib -fno-builtin -fno-strict-aliasing -static
+LFLAGS := $(MFLAGS) -T $(LSCRIPT) $(L_LIB) -nodefaultlibs -nolibc -nostdlib \
+		  -fno-builtin -fno-strict-aliasing -static
 
-.PHONY: all $(PROGRAM) dump flash clean format bdbg dbg attach
+.PHONY: all $(PROGRAM) dump flash clean format bdbg dbg attach 
 
 all: $(PROGRAM)
 
@@ -51,13 +59,13 @@ $(PROGRAM): $(OBJ)
 	@$(AS) $(CFLAGS) $< -o $@
 
 dump:
-	@$(DUMP) -D $(PROGRAM)
+	@$(DUMP) -Db $(PROGRAM)
 
 clean:
-	@rm *.o *.elf *.hex *.bin $(PROGRAM)
+	@rm -f *.o *.elf *.hex *.bin $(PROGRAM)
 
 format:
-	@clang-format -style=llvm -dump-config > .clang-format
+	@clang-format -style=microsoft -dump-config > .clang-format
 	@clang-format -i *.c
 
 flash:
@@ -65,10 +73,10 @@ flash:
 	@nrfjprog -f NRF52 --reset
 
 attach:
-	@openocd -f openocd.cfg
+	@openocd -c "set PROGRAM $(PROGRAM).hex" -f $(OCD_CFG)
 
 dbg:
-	arm-none-eabi-gdb -x init.gdb --args blinky
+	@$(GDB) -x $(GDB_CFG) --args $(PROGRAM)
 
 bdbg:
-	arm-none-eabi-gdb --batch -x init.gdb --args blinky
+	@$(GDB) --batch -x $(GDB_CFG) --args $(PROGRAM)
