@@ -30,6 +30,10 @@ OBJ := $(C_SRC:%.c=%.o) $(A_SRC:%.s=%.o)
 C_INC := -I $(NRFX) \
 		 -I $(NRFX)/hal \
 		 -I $(NRFX)/mdk \
+		 -I $(NRFX)/soc \
+		 -I $(NRFX)/templates \
+		 -I $(NRFX)/drivers \
+		 -I $(NRFX)/drivers/include \
 		 -I $(CMSIS)/CMSIS/Core/Include
 
 L_LIB := -L $(NRFX)/mdk 

@@ -1,3 +1,3 @@
-PROGRAM = button
+PROGRAM = button_isr
 
 include ../common.mk
