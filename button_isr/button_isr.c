@@ -1,16 +1,48 @@
 #include "nrf52_bitfields.h"
 #include <nrf.h>
 
+#define UART_TX (6UL)
+#define UART_RX (8UL)
 #define BUT1 (13UL)
 #define LED1 (17UL)
 #define LED2 (18UL)
 #define LED3 (19UL)
+
+volatile static uint32_t ptr = 1;
+volatile static const uint8_t buf[] = {'H', 'e', 'l', 'l', 'o', '\r', '\n'};
 
 int main(void)
 {
     NRF_CLOCK->TASKS_HFCLKSTART = 1;
     while(NRF_CLOCK->EVENTS_HFCLKSTARTED == 0);
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
+
+    NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Disabled;
+
+    NRF_UART0->PSELRTS = 0xFFFFFFFF;
+
+    NRF_UART0->PSELCTS = 0xFFFFFFFF;
+
+    NRF_UART0->TASKS_STOPRX = 1;
+    NRF_UART0->PSELRXD = 0xFFFFFFFF;
+
+    NRF_GPIO->PIN_CNF[UART_TX] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos) |
+                                (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos) |
+                                (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos) |
+                                (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) |
+                                (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos);
+    NRF_GPIO->OUTSET |= (1UL << UART_TX);
+
+    NRF_UART0->TASKS_STOPTX = 1;
+    NRF_UART0->INTENSET = (UART_INTENSET_ERROR_Enabled << UART_INTENSET_ERROR_Pos) |
+                        (UART_INTENSET_TXDRDY_Enabled << UART_INTENSET_TXDRDY_Pos);
+    NRF_UART0->PSELTXD = UART_TX;
+    NRF_UART0->BAUDRATE = UART_BAUDRATE_BAUDRATE_Baud115200;
+    NRF_UART0->CONFIG = (UART_CONFIG_HWFC_Disabled << UART_CONFIG_HWFC_Pos) |
+                        (UART_CONFIG_PARITY_Included << UART_CONFIG_PARITY_Pos);
+    NVIC_EnableIRQ(UART0_IRQn);
+    NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Enabled;
+    NRF_UART0->TASKS_STARTTX = 1;
 
     NRF_GPIO->PIN_CNF[BUT1] =
         (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos) | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) |
@@ -72,8 +104,38 @@ int main(void)
     NRF_GPIO->OUTSET |= (1UL << LED1);
     NRF_GPIO->OUTSET |= (1UL << LED2);
 
-    while (1);
+    NRF_UART0->TXD = (uint32_t)buf[0];
+
+    while (1) {
+        __WFE();
+    }
     return 0;
+}
+
+void UART0_IRQHandler(void) {
+    if(NRF_UART0->EVENTS_ERROR) {
+        NRF_UART0->EVENTS_ERROR = 0;
+        if ((NRF_UART0->ERRORSRC >> UART_ERRORSRC_OVERRUN_Pos) & 1UL) {
+            __WFE();
+        }
+        if ((NRF_UART0->ERRORSRC >> UART_ERRORSRC_PARITY_Pos) & 1UL) {
+            __WFE();
+        }
+        if ((NRF_UART0->ERRORSRC >> UART_ERRORSRC_FRAMING_Pos) & 1UL) {
+            __WFE();
+        }
+        if ((NRF_UART0->ERRORSRC >> UART_ERRORSRC_BREAK_Pos) & 1UL) {
+            __WFE();
+        }
+    }
+    else if(NRF_UART0->EVENTS_TXDRDY) {
+        NRF_UART0->EVENTS_TXDRDY = 0;
+        NRF_UART0->TXD = (uint32_t)buf[ptr];
+        ptr++;
+        if(ptr >= sizeof(buf)) {
+            ptr = 0;
+        }
+    }
 }
 
 void GPIOTE_IRQHandler(void) {
