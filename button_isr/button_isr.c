@@ -8,23 +8,28 @@
 #define LED2 (18UL)
 #define LED3 (19UL)
 
-volatile static uint32_t ptr = 1;
-volatile static const uint8_t buf[] = {'H', 'e', 'l', 'l', 'o', '\r', '\n'};
+volatile static const uint8_t buf[] = {'H', 'e', 'l', 'l', 'o', ',', 'w', 'o', 'r', 'l', 'd', '!', '\r', '\n'};
+
+void uarte_endtx_handler(void) {
+    NRF_UARTE0->TXD.PTR = (uint32_t)&buf[0];
+    NRF_UARTE0->TXD.MAXCNT = sizeof(buf);
+    NRF_UARTE0->TASKS_STARTTX = 1;
+    while(!(NRF_UARTE0->EVENTS_TXSTARTED));
+    NRF_UARTE0->EVENTS_TXSTARTED = 0;
+}
 
 int main(void)
 {
     NRF_CLOCK->TASKS_HFCLKSTART = 1;
     while(NRF_CLOCK->EVENTS_HFCLKSTARTED == 0);
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
-
-    NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Disabled;
-
-    NRF_UART0->PSELRTS = 0xFFFFFFFF;
-
-    NRF_UART0->PSELCTS = 0xFFFFFFFF;
-
-    NRF_UART0->TASKS_STOPRX = 1;
-    NRF_UART0->PSELRXD = 0xFFFFFFFF;
+    
+    NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Disabled << UART_ENABLE_ENABLE_Pos;
+    NRF_UARTE0->ENABLE = UARTE_ENABLE_ENABLE_Disabled << UARTE_ENABLE_ENABLE_Pos;
+    NRF_UARTE0->PSEL.RTS = UARTE_PSEL_RTS_CONNECT_Disconnected << UARTE_PSEL_RTS_CONNECT_Pos;
+    NRF_UARTE0->PSEL.CTS = UARTE_PSEL_CTS_CONNECT_Disconnected << UARTE_PSEL_CTS_CONNECT_Pos;
+    NRF_UARTE0->TASKS_STOPRX = 1;
+    NRF_UARTE0->PSEL.RXD = UARTE_PSEL_RXD_CONNECT_Disconnected << UARTE_PSEL_RXD_CONNECT_Pos;
 
     NRF_GPIO->PIN_CNF[UART_TX] = (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos) |
                                 (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos) |
@@ -33,16 +38,24 @@ int main(void)
                                 (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos);
     NRF_GPIO->OUTSET |= (1UL << UART_TX);
 
-    NRF_UART0->TASKS_STOPTX = 1;
-    NRF_UART0->INTENSET = (UART_INTENSET_ERROR_Enabled << UART_INTENSET_ERROR_Pos) |
-                        (UART_INTENSET_TXDRDY_Enabled << UART_INTENSET_TXDRDY_Pos);
-    NRF_UART0->PSELTXD = UART_TX;
-    NRF_UART0->BAUDRATE = UART_BAUDRATE_BAUDRATE_Baud115200;
-    NRF_UART0->CONFIG = (UART_CONFIG_HWFC_Disabled << UART_CONFIG_HWFC_Pos) |
-                        (UART_CONFIG_PARITY_Included << UART_CONFIG_PARITY_Pos);
-    NVIC_EnableIRQ(UART0_IRQn);
-    NRF_UART0->ENABLE = UART_ENABLE_ENABLE_Enabled;
-    NRF_UART0->TASKS_STARTTX = 1;
+    NRF_UARTE0->TASKS_STOPTX = 1;
+    NRF_UARTE0->INTENSET = (UARTE_INTENSET_ERROR_Enabled << UARTE_INTENSET_ERROR_Pos) |
+                        (UARTE_INTENSET_TXDRDY_Enabled << UARTE_INTENSET_TXDRDY_Pos) |
+                        (UARTE_INTENSET_ENDTX_Enabled << UARTE_INTENSET_ENDTX_Pos);
+    NRF_UARTE0->PSEL.TXD = UART_TX;
+    NRF_UARTE0->BAUDRATE = UARTE_BAUDRATE_BAUDRATE_Baud115200 << UARTE_BAUDRATE_BAUDRATE_Pos;
+    NRF_UARTE0->CONFIG = (UARTE_CONFIG_HWFC_Disabled << UARTE_CONFIG_HWFC_Pos) |
+                        (UARTE_CONFIG_PARITY_Included << UARTE_CONFIG_PARITY_Pos);
+
+    NVIC_EnableIRQ(UARTE0_UART0_IRQn);
+    NRF_UARTE0->ENABLE = UARTE_ENABLE_ENABLE_Enabled << UARTE_ENABLE_ENABLE_Pos;
+
+    NRF_UARTE0->TXD.PTR = (uint32_t)&buf[0];
+    NRF_UARTE0->TXD.MAXCNT = sizeof(buf);
+
+    NRF_UARTE0->TASKS_STARTTX = 1;
+    while(!(NRF_UARTE0->EVENTS_TXSTARTED));
+    NRF_UARTE0->EVENTS_TXSTARTED = 0;
 
     NRF_GPIO->PIN_CNF[BUT1] =
         (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos) | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) |
@@ -104,37 +117,34 @@ int main(void)
     NRF_GPIO->OUTSET |= (1UL << LED1);
     NRF_GPIO->OUTSET |= (1UL << LED2);
 
-    NRF_UART0->TXD = (uint32_t)buf[0];
-
     while (1) {
         __WFE();
     }
     return 0;
 }
 
-void UART0_IRQHandler(void) {
-    if(NRF_UART0->EVENTS_ERROR) {
-        NRF_UART0->EVENTS_ERROR = 0;
-        if ((NRF_UART0->ERRORSRC >> UART_ERRORSRC_OVERRUN_Pos) & 1UL) {
+void UARTE0_UART0_IRQHandler(void) {
+    if(NRF_UARTE0->EVENTS_ERROR) {
+        NRF_UARTE0->EVENTS_ERROR = 0;
+        if ((NRF_UARTE0->ERRORSRC >> UART_ERRORSRC_OVERRUN_Pos) & 1UL) {
             __WFE();
         }
-        if ((NRF_UART0->ERRORSRC >> UART_ERRORSRC_PARITY_Pos) & 1UL) {
+        if ((NRF_UARTE0->ERRORSRC >> UART_ERRORSRC_PARITY_Pos) & 1UL) {
             __WFE();
         }
-        if ((NRF_UART0->ERRORSRC >> UART_ERRORSRC_FRAMING_Pos) & 1UL) {
+        if ((NRF_UARTE0->ERRORSRC >> UART_ERRORSRC_FRAMING_Pos) & 1UL) {
             __WFE();
         }
-        if ((NRF_UART0->ERRORSRC >> UART_ERRORSRC_BREAK_Pos) & 1UL) {
+        if ((NRF_UARTE0->ERRORSRC >> UART_ERRORSRC_BREAK_Pos) & 1UL) {
             __WFE();
         }
     }
-    else if(NRF_UART0->EVENTS_TXDRDY) {
-        NRF_UART0->EVENTS_TXDRDY = 0;
-        NRF_UART0->TXD = (uint32_t)buf[ptr];
-        ptr++;
-        if(ptr >= sizeof(buf)) {
-            ptr = 0;
-        }
+    if(NRF_UARTE0->EVENTS_TXDRDY) {
+        NRF_UARTE0->EVENTS_TXDRDY = 0;
+    }
+    if(NRF_UARTE0->EVENTS_ENDTX) {
+        NRF_UARTE0->EVENTS_ENDTX = 0;
+        uarte_endtx_handler();
     }
 }
 

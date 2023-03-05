@@ -125,4 +125,15 @@ commands
 printf "Average temperature: %d", avg
 continue
 end
+
+break button_isr.c:134
+commands
+continue
+end
+
+break button_isr.c:137
+commands
+continue
+end
+
 continue

@@ -44,7 +44,7 @@ CFLAGS := $(MFLAGS) $(C_INC) -ffunction-sections -fdata-sections \
 LFLAGS := $(MFLAGS) -T $(LSCRIPT) $(L_LIB) -nodefaultlibs -nolibc -nostdlib \
 		  -fno-builtin -fno-strict-aliasing -static
 
-.PHONY: all $(PROGRAM) dump flash clean format bdbg dbg attach 
+.PHONY: all $(PROGRAM) dump flash clean format bdbg dbg attach docs
 
 all: $(PROGRAM)
 
@@ -84,3 +84,7 @@ dbg:
 
 bdbg:
 	@$(GDB) --batch -x $(GDB_CFG) --args $(PROGRAM)
+
+docs:
+	@zathura $(WORK)/docs/nRF52832_PS_v1.8.pdf > /dev/null &
+	@zathura $(WORK)/docs/nRF52_DK_User_Guide_v2.x.x.pdf > /dev/null &
