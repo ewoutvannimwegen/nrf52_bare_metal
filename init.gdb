@@ -105,7 +105,7 @@ end
 #continue
 #end
 
-hbreak accel.c:107
+hbreak accel.c:105
 commands
 printf "GPIO->PIN_CNF[SDA]_DIR: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA] >> GPIO_PIN_CNF_DIR_Pos) & 1UL)
 printf "GPIO->PIN_CNF[SDA]_INPUT: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA] >> GPIO_PIN_CNF_INPUT_Pos) & 1UL)
@@ -143,7 +143,7 @@ printf "TWIM0->EVENT_LASTTX: %d\n", NRF_TWIM0->EVENTS_LASTTX
 continue
 end
 
-hbreak accel.c:127
+hbreak accel.c:123
 commands
 continue
 end
@@ -159,9 +159,8 @@ end
 #continue
 #end
 
-hbreak accel.c:165
+hbreak accel.c:155
 commands
-printf "TWIM0_TX_PTR: %d\n", twim0_tx_ptr
 printf "TWIM0->TXD.AMOUNT: %d\n", NRF_TWIM0->TXD.AMOUNT
 continue
 end

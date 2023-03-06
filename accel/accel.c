@@ -50,7 +50,6 @@ volatile static uint8_t twim0_tx_buf[] = {REG_RESET,
                                           REG_DATA_A,
                                           0x0};
 volatile static uint8_t twim0_rx_buf[] = {};
-volatile static uint32_t twim0_tx_ptr, twim0_rx_ptr;
 
 int main(void)
 {
@@ -58,8 +57,7 @@ int main(void)
     while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
         ;
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
-    twim0_tx_ptr = 0;
-    twim0_rx_ptr = 0;
+
     NRF_GPIO->PIN_CNF[PIN_VDD_PWD_CTRL] =
         (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos) | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) |
         (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos) |
@@ -88,11 +86,11 @@ int main(void)
         (TWIM_PSEL_SDA_CONNECT_Connected << TWIM_PSEL_SDA_CONNECT_Pos) | (PIN_SDA << TWIM_PSEL_SDA_PIN_Pos);
     NRF_TWIM0->PSEL.SCL =
         (TWIM_PSEL_SCL_CONNECT_Connected << TWIM_PSEL_SCL_CONNECT_Pos) | (PIN_SCL << TWIM_PSEL_SCL_PIN_Pos);
-    NRF_TWIM0->FREQUENCY = TWIM_FREQUENCY_FREQUENCY_K100 << TWIM_FREQUENCY_FREQUENCY_Pos;
+    NRF_TWIM0->FREQUENCY = TWIM_FREQUENCY_FREQUENCY_K400 << TWIM_FREQUENCY_FREQUENCY_Pos;
 
     NRF_TWIM0->ADDRESS = SX1509B << TWIM_ADDRESS_ADDRESS_Pos;
-    NRF_TWIM0->TXD.PTR = (uint32_t)&twim0_tx_buf[twim0_tx_ptr];
-    NRF_TWIM0->TXD.MAXCNT = 2;
+    NRF_TWIM0->TXD.PTR = (uint32_t)&twim0_tx_buf[0];
+    NRF_TWIM0->TXD.MAXCNT = sizeof(twim0_tx_buf);
     NRF_TWIM0->RXD.PTR = (uint32_t)&twim0_rx_buf[0];
     NRF_TWIM0->RXD.MAXCNT = 1;
 
@@ -105,9 +103,7 @@ int main(void)
                           (TWIM_INTENSET_LASTTX_Enabled << TWIM_INTENSET_LASTTX_Pos);
     NVIC_EnableIRQ(SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQn);
     NRF_TWIM0->ENABLE = TWIM_ENABLE_ENABLE_Enabled << TWIM_ENABLE_ENABLE_Pos;
-
     NRF_TWIM0->TASKS_STARTTX = 1;
-    __NOP();
 
     while (1)
     {
@@ -157,11 +153,5 @@ void SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQHandler(void)
     if (NRF_TWIM0->EVENTS_LASTTX)
     {
         NRF_TWIM0->EVENTS_LASTTX = 0;
-        if (twim0_tx_ptr < sizeof(twim0_tx_buf)-1)
-        {
-            twim0_tx_ptr += 2;
-            NRF_TWIM0->TXD.PTR = (uint32_t)&twim0_tx_buf[twim0_tx_ptr];
-        }
-        NRF_TWIM0->TASKS_STARTTX = 1;
     }
 }
