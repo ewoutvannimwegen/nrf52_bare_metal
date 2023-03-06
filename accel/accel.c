@@ -17,42 +17,40 @@
 #define SX1509B (0x3E)
 #define PIN_VDD_PWD_CTRL (30UL)
 
-volatile static uint8_t twim0_tx_buf[] = { REG_RESET,
-    0x12, REG_RESET, 0x34,
-    REG_INPUT_DISABLE_B,
-    0xFF,
-    REG_INPUT_DISABLE_A,
-    0xFF,
-    REG_PULL_UP_B,
-    0x0,
-    REG_PULL_UP_A,
-    0x0,
-    REG_OPEN_DRAIN_B,
-    0xFF,
-    REG_OPEN_DRAIN_A,
-    0xFF,
-    REG_DIR_B,
-    0x0,
-    REG_DIR_A,
-    0x0,
-    REG_CLOCK,
-    0b01000001, 
-    REG_MISC,
-    0b00100000,
-    REG_LED_DRIVER_ENABLE_B,
-    0xFF,
-    REG_LED_DRIVER_ENABLE_A,
-    0xFF,
-    REG_DATA_B,
-    0x0,
-    REG_DATA_A,
-    0x0,
-    REG_DATA_B,
-    0b1010001,
-    REG_DATA_A,
-    0xFF
-};
-volatile static uint8_t twim0_rx_buf[1] = {0};
+volatile static uint8_t twim0_tx_buf[] = {REG_RESET,
+                                          0x12,
+                                          REG_RESET,
+                                          0x34,
+                                          REG_INPUT_DISABLE_B,
+                                          0xFF,
+                                          REG_INPUT_DISABLE_A,
+                                          0xFF,
+                                          REG_PULL_UP_B,
+                                          0x0,
+                                          REG_PULL_UP_A,
+                                          0x0,
+                                          REG_OPEN_DRAIN_B,
+                                          0xFF,
+                                          REG_OPEN_DRAIN_A,
+                                          0xFF,
+                                          REG_DIR_B,
+                                          0x0,
+                                          REG_DIR_A,
+                                          0x0,
+                                          REG_CLOCK,
+                                          0b01000001,
+                                          REG_MISC,
+                                          0b00010000,
+                                          REG_LED_DRIVER_ENABLE_B,
+                                          0xFF,
+                                          REG_LED_DRIVER_ENABLE_A,
+                                          0xFF,
+                                          REG_DATA_B,
+                                          0x0,
+                                          REG_DATA_A,
+                                          0x0};
+volatile static uint8_t twim0_rx_buf[] = {};
+volatile static uint32_t twim0_tx_ptr, twim0_rx_ptr;
 
 int main(void)
 {
@@ -60,6 +58,8 @@ int main(void)
     while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
         ;
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
+    twim0_tx_ptr = 0;
+    twim0_rx_ptr = 0;
     NRF_GPIO->PIN_CNF[PIN_VDD_PWD_CTRL] =
         (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos) | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) |
         (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos) |
@@ -90,11 +90,9 @@ int main(void)
         (TWIM_PSEL_SCL_CONNECT_Connected << TWIM_PSEL_SCL_CONNECT_Pos) | (PIN_SCL << TWIM_PSEL_SCL_PIN_Pos);
     NRF_TWIM0->FREQUENCY = TWIM_FREQUENCY_FREQUENCY_K100 << TWIM_FREQUENCY_FREQUENCY_Pos;
 
-    NRF_TWIM0->SHORTS |= TWIM_SHORTS_LASTRX_STOP_Enabled << TWIM_SHORTS_LASTRX_STOP_Pos;
-
     NRF_TWIM0->ADDRESS = SX1509B << TWIM_ADDRESS_ADDRESS_Pos;
-    NRF_TWIM0->TXD.PTR = (uint32_t)&twim0_tx_buf[0];
-    NRF_TWIM0->TXD.MAXCNT = sizeof(twim0_tx_buf);
+    NRF_TWIM0->TXD.PTR = (uint32_t)&twim0_tx_buf[twim0_tx_ptr];
+    NRF_TWIM0->TXD.MAXCNT = 2;
     NRF_TWIM0->RXD.PTR = (uint32_t)&twim0_rx_buf[0];
     NRF_TWIM0->RXD.MAXCNT = 1;
 
@@ -106,10 +104,10 @@ int main(void)
                           (TWIM_INTENSET_LASTRX_Enabled << TWIM_INTENSET_LASTRX_Pos) |
                           (TWIM_INTENSET_LASTTX_Enabled << TWIM_INTENSET_LASTTX_Pos);
     NVIC_EnableIRQ(SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQn);
-    NRF_TWIM0->SHORTS |= TWIM_SHORTS_LASTTX_STOP_Enabled << TWIM_SHORTS_LASTTX_STOP_Pos;
     NRF_TWIM0->ENABLE = TWIM_ENABLE_ENABLE_Enabled << TWIM_ENABLE_ENABLE_Pos;
 
     NRF_TWIM0->TASKS_STARTTX = 1;
+    __NOP();
 
     while (1)
     {
@@ -159,6 +157,11 @@ void SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0_IRQHandler(void)
     if (NRF_TWIM0->EVENTS_LASTTX)
     {
         NRF_TWIM0->EVENTS_LASTTX = 0;
-        NRF_TWIM0->TASKS_STARTRX = 1;
+        if (twim0_tx_ptr < sizeof(twim0_tx_buf)-1)
+        {
+            twim0_tx_ptr += 2;
+            NRF_TWIM0->TXD.PTR = (uint32_t)&twim0_tx_buf[twim0_tx_ptr];
+        }
+        NRF_TWIM0->TASKS_STARTTX = 1;
     }
 }

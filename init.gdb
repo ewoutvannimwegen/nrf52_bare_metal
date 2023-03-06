@@ -105,7 +105,7 @@ end
 #continue
 #end
 
-hbreak accel.c:88
+hbreak accel.c:107
 commands
 printf "GPIO->PIN_CNF[SDA]_DIR: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA] >> GPIO_PIN_CNF_DIR_Pos) & 1UL)
 printf "GPIO->PIN_CNF[SDA]_INPUT: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA] >> GPIO_PIN_CNF_INPUT_Pos) & 1UL)
@@ -115,7 +115,8 @@ printf "GPIO->PIN_CNF[SCL]_INPUT: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SCL] >> GPIO_PI
 printf "GPIO->PIN_CNF[SCL]_DRIVE: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SCL] >> GPIO_PIN_CNF_DRIVE_Pos) & 7UL)
 printf "TWIM0->ENABLE: 0x%x\n", NRF_TWIM0->ENABLE
 printf "TWIM0->FREQUENCY: 0x%x\n", NRF_TWIM0->FREQUENCY
-printf "TWIM0->SHORTS: 0x%x\n", NRF_TWIM0->SHORTS
+printf "TWIM0->SHORTS_LASTTX_STARTRX: %d\n", ((NRF_TWIM0->SHORTS >> TWIM_SHORTS_LASTTX_STARTRX_Pos) & 1UL)
+printf "TWIM0->SHORTS_LASTRX_STOP: %d\n", ((NRF_TWIM0->SHORTS >> TWIM_SHORTS_LASTRX_STOP_Pos) & 1UL)
 printf "TWIM0->PSEL.SCL_CONNECT: %d\n", ((NRF_TWIM0->PSEL.SCL >> TWIM_PSEL_SCL_CONNECT_Pos) & 1UL) 
 printf "TWIM0->PSEL.SDA_CONNECT: %d\n", ((NRF_TWIM0->PSEL.SDA >> TWIM_PSEL_SDA_CONNECT_Pos) & 1UL) 
 printf "TWIM0->PSEL.SCL_PIN: %x\n", NRF_TWIM0->PSEL.SCL >> TWIM_PSEL_SCL_PIN_Pos
@@ -142,15 +143,25 @@ printf "TWIM0->EVENT_LASTTX: %d\n", NRF_TWIM0->EVENTS_LASTTX
 continue
 end
 
-hbreak accel.c:129
-hbreak accel.c:157
+hbreak accel.c:127
 commands
-printf "TWIM0->RXD.AMOUNT: %d\n", NRF_TWIM0->RXD.AMOUNT
-printf "TWIM0_RX_BUF: %s\n", twim0_rx_buf
 continue
 end
-hbreak accel.c:161
+#hbreak accel.c:1
+#commands
+#printf "TWIM0_RX_PTR: %d\n", twim0_rx_ptr
+#set $idx = 0
+#while ($idx < 4)
+#    printf "0x%x\n", twim0_rx_buf[$idx]
+#    set $idx=$idx+1
+#end
+#printf "TWIM0->RXD.AMOUNT: %d\n", NRF_TWIM0->RXD.AMOUNT
+#continue
+#end
+
+hbreak accel.c:165
 commands
+printf "TWIM0_TX_PTR: %d\n", twim0_tx_ptr
 printf "TWIM0->TXD.AMOUNT: %d\n", NRF_TWIM0->TXD.AMOUNT
 continue
 end
