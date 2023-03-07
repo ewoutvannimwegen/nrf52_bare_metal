@@ -91,4 +91,5 @@ docs:
 	@zathura $(WORK)/docs/nRF52_DK_User_Guide_v2.x.x.pdf > /dev/null &
 	@zathura $(WORK)/docs/Thingy52_UG_v1.2.pdf > /dev/null &
 	@zathura $(WORK)/docs/SEMT_S_A0001140582_1-2575696.pdf > /dev/null &
+	@zathura $(WORK)/docs/lis2dh12.pdf > /dev/null &
 
