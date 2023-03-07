@@ -138,7 +138,7 @@ int main(void)
 
     for (int addr = 0; addr < sizeof(sx1509_init_seq); addr = addr + 2)
     {
-        sx1509_read_buf[addr] = i2c_read(addr);
+        sx1509_read_buf[addr] = i2c_read(sx1509_init_seq[addr]);
     }
   
     sx1509_write_buf[0] = REG_DATA_A;
