@@ -148,7 +148,13 @@ end
 #end
 
 
-hbreak accel.c:276
+hbreak accel.c:393
+commands
+printf "%d,%d\n", lis2dh12_xy[0], lis2dh12_xy[1]
+continue
+end
+
+hbreak accel.c:393
 commands
 set $idx = 0
 printf "TWIM0->SX1509_RX_BUF: "
@@ -158,19 +164,6 @@ while ($idx < 16)
 end
 printf "\n"
 printf "TWIM0->RXD.AMOUNT: %d\n", NRF_TWIM0->RXD.AMOUNT
-continue
-end
-
-hbreak accel.c:277
-commands
-set $idx = 0
-printf "TWIM1->LIS2DH12_RX_BUF: "
-while ($idx < 21)
-    printf "0x%x ", lis2dh12_read_buf[$idx]
-    set $idx=$idx+1
-end
-printf "\n"
-printf "TWIM1->RXD.AMOUNT: %d\n", NRF_TWIM1->RXD.AMOUNT
 continue
 end
 

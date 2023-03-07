@@ -14,6 +14,8 @@
 
 #define TWIM0_BUS 0
 #define TWIM1_BUS 1
+   
+volatile static uint8_t lis2dh12_xy[2] = {};
 
 void delay_ms(uint32_t ms)
 {
@@ -146,57 +148,69 @@ int main(void)
 
     volatile static uint8_t lis2dh12_init_seq[] = {
         LIS_REG_CTRL0_ADDR, 
-        0x10, 
+        LIS_CTRL0_DEFAULT, 
         LIS_REG_TEMP_CFG_ADDR, 
-        0x0,
+        LIS_TEMP_CFG_DEFAULT,
         LIS_REG_CTRL1_ADDR, 
-        0x7,        
+        LIS_CTRL1_DEFAULT,        
         LIS_REG_CTRL2_ADDR,
-        0x0,
+        LIS_CTRL2_DEFAULT,
         LIS_REG_CTRL3_ADDR,
-        0x0,
+        LIS_CTRL3_DEFAULT,
         LIS_REG_CTRL4_ADDR,
-        0x0,
+        LIS_CTRL4_DEFAULT,
         LIS_REG_CTRL5_ADDR,
-        0x0,
+        LIS_CTRL5_DEFAULT,
         LIS_REG_CTRL6_ADDR,
-        0x0,
+        LIS_CTRL6_DEFAULT,
         LIS_REG_FIFO_CTRL_ADDR,
-        0x0,
+        LIS_FIFO_CTRL_DEFAULT,
         LIS_REG_INT1_CFG_ADDR,
-        0x0,
+        LIS_INT1_CFG_DEFAULT,
         LIS_REG_INT1_THS_ADDR,
-        0x0,
+        LIS_INT1_THS_DEFAULT,
         LIS_REG_INT1_DURATION_ADDR,
-        0x0,
+        LIS_INT2_DURATION_DEFAULT,
         LIS_REG_INT2_CFG_ADDR,
-        0x0,
+        LIS_INT2_CFG_DEFAULT,
         LIS_REG_INT2_THS_ADDR,
-        0x0,
+        LIS_INT2_THS_DEFAULT,
         LIS_REG_INT2_DURATION_ADDR,
-        0x0,
+        LIS_INT2_DURATION_DEFAULT,
         LIS_REG_CLICK_CFG_ADDR,
-        0x0,
+        LIS_CLICK_CFG_DEFAULT,
         LIS_REG_CLICK_THS_ADDR,
-        0x0,
+        LIS_CLICK_THS_DEFAULT,
         LIS_REG_TIME_LIMIT_ADDR,
-        0x0,
+        LIS_TIME_LIMIT_DEFAULT,
         LIS_REG_TIME_LATENCY_ADDR,
-        0x0,
+        LIS_TIME_LATENCY_DEFAULT,
         LIS_REG_TIME_WINDOW_ADDR,
-        0x0,
+        LIS_TIME_WINDOW_DEFAULT,
         LIS_REG_ACT_THS_ADDR,
-        0x0,
+        LIS_ACT_THS_DEFAULT,
         LIS_REG_ACT_DUR_ADDR,
-        0x0,
+        LIS_ACT_DUR_DEFAULT, // End of reset
     };
 
     NRF_CLOCK->TASKS_HFCLKSTART = 1;
     while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
         ;
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
+    
+    NRF_TIMER0->TASKS_STOP = 1;
+    NRF_TIMER0->TASKS_CLEAR = 1;
+    NRF_TIMER0->PRESCALER = 8; // 16MHz / (2^prescaler); 16MHz/8=62.5k
+    NRF_TIMER0->MODE = TIMER_MODE_MODE_Timer;
+    NRF_TIMER0->BITMODE = TIMER_BITMODE_BITMODE_32Bit;
+    NRF_TIMER0->CC[0] = 62500;
+    NRF_TIMER0->CC[1] = 125000;
+    NRF_TIMER0->INTENSET = (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos) | 
+        (TIMER_INTENSET_COMPARE1_Enabled << TIMER_INTENSET_COMPARE1_Pos);
+    NVIC_SetPriority(TIMER0_IRQn, 8);
+    NVIC_EnableIRQ(TIMER0_IRQn);
+    NRF_TIMER0->TASKS_START = 1;
 
-    NRF_SPIM0->ENABLE = SPIM_ENABLE_ENABLE_Disabled << SPIM_ENABLE_ENABLE_Pos;
     NRF_SPIS0->ENABLE = SPIS_ENABLE_ENABLE_Disabled << SPIS_ENABLE_ENABLE_Pos;
     NRF_SPI0->ENABLE = SPI_ENABLE_ENABLE_Disabled << SPI_ENABLE_ENABLE_Pos;
     NRF_TWIM0->ENABLE = TWIM_ENABLE_ENABLE_Disabled << TWIM_ENABLE_ENABLE_Pos;
@@ -209,6 +223,19 @@ int main(void)
     NRF_SPI1->ENABLE = SPI_ENABLE_ENABLE_Disabled << SPI_ENABLE_ENABLE_Pos;
     NRF_SPIM1->ENABLE = SPIM_ENABLE_ENABLE_Disabled << SPIM_ENABLE_ENABLE_Pos;
     NRF_SPIS1->ENABLE = SPIS_ENABLE_ENABLE_Disabled << SPIS_ENABLE_ENABLE_Pos;
+
+    NRF_GPIO->PIN_CNF[PIN_LIS_INT1] =
+        (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos) | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) |
+        (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos) | (GPIO_PIN_CNF_PULL_Disabled << GPIO_PIN_CNF_PULL_Pos) |
+        (GPIO_PIN_CNF_SENSE_High << GPIO_PIN_CNF_SENSE_Pos);
+    NRF_GPIO->DETECTMODE |= (1UL << PIN_LIS_INT1);
+
+    NRF_GPIOTE->CONFIG[GPIOTE_INTENSET_IN0_Pos] = (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos) |
+                                                  (PIN_LIS_INT1 << GPIOTE_CONFIG_PSEL_Pos) |
+                                                  (GPIOTE_CONFIG_POLARITY_LoToHi << GPIOTE_CONFIG_POLARITY_Pos);
+
+    NRF_GPIOTE->INTENSET |= (GPIOTE_INTENSET_IN0_Enabled << GPIOTE_INTENSET_IN0_Pos);
+    NVIC_EnableIRQ(GPIOTE_IRQn);
 
     NRF_GPIO->PIN_CNF[PIN_VDD_PWD_CTRL] =
         (GPIO_PIN_CNF_DIR_Output << GPIO_PIN_CNF_DIR_Pos) | (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos) |
@@ -272,19 +299,12 @@ int main(void)
     {
         lis2dh12_read_buf[addr] = i2c_read(TWIM1_BUS, lis2dh12_init_seq[addr*2]);
     }
-    
-    lis2dh12_read_buf[0] = i2c_read(TWIM1_BUS, LIS_REG_WHO_AM_I_ADDR);
-    sx1509_write_buf[0] = REG_DATA_A;
-    sx1509_write_buf[1] = 0x0;
-    sx1509_write_buf[2] = REG_DATA_A;
-    sx1509_write_buf[3] = 0xFF;
-
+    i2c_write(TWIM1_BUS, LIS_REG_CTRL1_ADDR, (LIS_CTRL1_ODR_1HZ << LIS_CTRL1_ODR_FIELD_OFFSET) | LIS_CTRL1_X_EN | LIS_CTRL1_Y_EN);
+    i2c_write(TWIM1_BUS, LIS_REG_CTRL3_ADDR, LIS_REG_CTRL3_I1_ZYXDA_En << LIS_REG_CTRL3_I1_ZYXDA_Pos);
+        
     while (1)
     {
-        i2c_write(TWIM0_BUS, sx1509_write_buf[0], sx1509_write_buf[1]);
-        delay_ms(500);
-        i2c_write(TWIM0_BUS, sx1509_write_buf[2], sx1509_write_buf[3]);
-        delay_ms(500);
+        delay_ms(50);
     }
     return 0;
 }
@@ -350,5 +370,27 @@ void SPIM1_SPIS1_TWIM1_TWIS1_SPI1_TWI1_IRQHandler(void)
     if (NRF_TWIM1->EVENTS_LASTTX)
     {
         NRF_TWIM1->EVENTS_LASTTX = 0;
+    }
+}
+
+void TIMER0_IRQHandler(void)
+{
+    if(NRF_TIMER0->EVENTS_COMPARE[0]) {
+        NRF_TIMER0->EVENTS_COMPARE[0] = 0;
+        i2c_write(TWIM0_BUS, REG_DATA_A, 0xFF);
+    }
+    if(NRF_TIMER0->EVENTS_COMPARE[1]) {
+        NRF_TIMER0->EVENTS_COMPARE[1] = 0;
+        NRF_TIMER0->TASKS_CLEAR = 1;
+        i2c_write(TWIM0_BUS, REG_DATA_A, 0x0);
+    }
+}
+
+void GPIOTE_IRQHandler(void)
+{
+    if (NRF_GPIOTE->EVENTS_IN[GPIOTE_INTENSET_IN0_Pos])
+    {
+        lis2dh12_xy[0] = i2c_read(TWIM1_BUS, LIS_REG_OUT_X_ADDR);
+        lis2dh12_xy[1] = i2c_read(TWIM1_BUS, LIS_REG_OUT_Y_ADDR);
     }
 }
