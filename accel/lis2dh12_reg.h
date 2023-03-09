@@ -15,9 +15,12 @@
 #define LIS_REG_CTRL6_ADDR                                         0x25 /* Control Register 6 */
 #define LIS_REG_REFERENCE_ADDR                                     0x26 /* Reference value for interrupt generation */
 #define LIS_REG_STATUS_ADDR                                        0x27 /* n/a */
-#define LIS_REG_OUT_X_ADDR                                         0x28 /* X-axis acceleration data */
-#define LIS_REG_OUT_Y_ADDR                                         0x2A /* Y-axis acceleration data */
-#define LIS_REG_OUT_Z_ADDR                                         0x2C /* Z-axis acceleration data */
+#define LIS_REG_OUT_X_L_ADDR                                       0x28 /* X-axis acceleration data */
+#define LIS_REG_OUT_X_H_ADDR                                       0x29 /* X-axis acceleration data */
+#define LIS_REG_OUT_Y_L_ADDR                                       0x2A /* Y-axis acceleration data */
+#define LIS_REG_OUT_Y_H_ADDR                                       0x2B /* Y-axis acceleration data */
+#define LIS_REG_OUT_Z_L_ADDR                                       0x2C /* Z-axis acceleration data */
+#define LIS_REG_OUT_Z_H_ADDR                                       0x2D /* Z-axis acceleration data */
 #define LIS_REG_FIFO_CTRL_ADDR                                     0x2E /* Fifo Control register */
 #define LIS_REG_FIFO_SRC_ADDR                                      0x2F /* Fifo status register */
 #define LIS_REG_INT1_CFG_ADDR                                      0x30 /* Interrupt 1 config register */
@@ -42,8 +45,38 @@
 #define LIS_REG_STATUS_YDA_Pos 1UL
 #define LIS_REG_STATUS_XDA_Pos 0UL
 
-#define LIS_REG_CTRL3_I1_ZYXDA_Pos 4UL
-#define LIS_REG_CTRL3_I1_ZYXDA_En 0x01
+#define LIS_REG_FIFO_CTRL_FM_Pos         (6UL)
+#define LIS_REG_FIFO_CTRL_FM_BYPASS      0b00
+#define LIS_REG_FIFO_CTRL_FM_FIFO        0b01
+#define LIS_REG_FIFO_CTRL_FM_STREAM      0b10
+#define LIS_REG_FIFO_CTRL_FM_STREAM2FIFO 0b11
+#define LIS_REG_FIFO_CTRL_TR_Pos         (6UL)
+#define LIS_REG_FIFO_CTRL_INT1           (0UL)
+#define LIS_REG_FIFO_CTRL_FTH_Pos        (0UL)
+
+#define LIS_REG_FIFO_SRC_WTM_Pos          (7UL)
+#define LIS_REG_FIFO_SRC_WTM_Enable       (1UL)
+#define LIS_REG_FIFO_SRC_OVRN_FIFO_Pos    (6UL)
+#define LIS_REG_FIFO_SRC_OVRN_FIFO_Enable (1UL)
+#define LIS_REG_FIFO_SRC_EMPTY_Pos        (5UL)
+#define LIS_REG_FIFO_SRC_EMPTY_Enable     (1UL)
+
+#define LIS_REG_CTRL5_ADDR_FIFO_EN_Disable (0UL)
+#define LIS_REG_CTRL5_ADDR_FIFO_EN_Enable  (1UL)
+#define LIS_REG_CTRL5_ADDR_FIFO_EN_Pos     (6UL)
+
+#define LIS_REG_CTRL3_I1_ZYXDA_Pos   (4UL)
+#define LIS_REG_CTRL3_I1_ZYXDA_En    (1UL) 
+#define LIS_REG_CTRL3_I1_WTM_Pos     (2UL)
+#define LIS_REG_CTRL3_I1_WTM_En      (1UL) 
+#define LIS_REG_CTRL3_I1_OVERRUN_Pos (1UL)
+#define LIS_REG_CTRL3_I1_OVERRUN_En  (1UL) 
+
+#define LIS_REG_CTRL1_HR_Pos (0UL)
+#define LIS_REG_CTRL1_HR_12B (1UL)
+#define LIS_REG_CTRL4_HR_Pos (3UL)
+#define LIS_REG_CTRL4_HR_12B (1UL)
+
 
 /* WHO_AM_I Register Fields */
     /* WHO_AM_I -> WHO_AM_I */
@@ -68,7 +101,7 @@
     #define LIS_CTRL1_LOW_PWR                                      0x08 /* Low-power mode enable */
     /* CTRL1 -> ODR */
     #define LIS_CTRL1_ODR_FIELD_MASK                               0xF0 /* Data rate selection */
-    #define LIS_CTRL1_ODR_FIELD_OFFSET                             0x04
+    #define LIS_CTRL1_ODR_FIELD_OFFSET                             (4UL) 
       #define LIS_CTRL1_ODR_PWR_DWN                                0x00 /* Power-down mode */
       #define LIS_CTRL1_ODR_1HZ                                    0x01 /* HR/ Normal / Low-power mode (1 Hz) */
       #define LIS_CTRL1_ODR_10HZ                                   0x08 /* HR/ Normal / Low-power mode (10 Hz) */
@@ -78,7 +111,7 @@
       #define LIS_CTRL1_ODR_200HZ                                  0x48 /* HR/ Normal / Low-power mode (200 Hz) */
       #define LIS_CTRL1_ODR_400HZ                                  0x49 /* HR/ Normal / Low-power mode (400 Hz) */
       #define LIS_CTRL1_ODR_1620HZ                                 0x07 /* Low-power mode (1.620 kHz) */
-      #define LIS_CTRL1_ODR_5376HZ                                 0x07 /* HR/ Normal (1.344 kHz) / Low-power mode (5.376 kHz) */
+      #define LIS_CTRL1_ODR_5376HZ                                 0x09 /* HR/ Normal (1.344 kHz) / Low-power mode (5.376 kHz) */
 
 /* CTRL2 Register Fields */
     /* CTRL2 -> Flags */

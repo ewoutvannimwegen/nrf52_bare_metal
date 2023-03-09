@@ -14,8 +14,9 @@
 
 #define TWIM0_BUS 0
 #define TWIM1_BUS 1
-   
-volatile static uint8_t lis2dh12_xy[2] = {};
+#define LIS2DH12_FIFO_LEN (10UL)
+volatile static uint32_t lis2dh12_ptr;
+volatile static uint8_t lis2dh12_xy[LIS2DH12_FIFO_LEN*4] = {};
 
 void delay_ms(uint32_t ms)
 {
@@ -109,6 +110,17 @@ uint8_t i2c_read(uint32_t bus, uint8_t addr)
     return rx_buf[0];
 }
 
+void lis2dh12_wtm_handler(void) {
+    lis2dh12_xy[lis2dh12_ptr] = i2c_read(TWIM1_BUS, LIS_REG_OUT_X_L_ADDR);
+    lis2dh12_xy[lis2dh12_ptr+1] = i2c_read(TWIM1_BUS, LIS_REG_OUT_X_H_ADDR);
+    lis2dh12_xy[lis2dh12_ptr+2] = i2c_read(TWIM1_BUS, LIS_REG_OUT_Y_L_ADDR);
+    lis2dh12_xy[lis2dh12_ptr+3] = i2c_read(TWIM1_BUS, LIS_REG_OUT_Y_H_ADDR);
+    lis2dh12_ptr += 4;
+    if(lis2dh12_ptr > sizeof(lis2dh12_xy)) {
+        lis2dh12_ptr = 0;
+    }
+}
+
 int main(void)
 {
     volatile static uint8_t sx1509_init_seq[] = {REG_RESET,
@@ -192,6 +204,7 @@ int main(void)
         LIS_REG_ACT_DUR_ADDR,
         LIS_ACT_DUR_DEFAULT, // End of reset
     };
+    lis2dh12_ptr = 0;
 
     NRF_CLOCK->TASKS_HFCLKSTART = 1;
     while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
@@ -299,13 +312,13 @@ int main(void)
     {
         lis2dh12_read_buf[addr] = i2c_read(TWIM1_BUS, lis2dh12_init_seq[addr*2]);
     }
-    i2c_write(TWIM1_BUS, LIS_REG_CTRL1_ADDR, (LIS_CTRL1_ODR_1HZ << LIS_CTRL1_ODR_FIELD_OFFSET) | LIS_CTRL1_X_EN | LIS_CTRL1_Y_EN);
-    i2c_write(TWIM1_BUS, LIS_REG_CTRL3_ADDR, LIS_REG_CTRL3_I1_ZYXDA_En << LIS_REG_CTRL3_I1_ZYXDA_Pos);
-        
-    while (1)
-    {
-        delay_ms(50);
-    }
+    i2c_write(TWIM1_BUS, LIS_REG_CTRL3_ADDR, (LIS_REG_CTRL3_I1_OVERRUN_En << LIS_REG_CTRL3_I1_OVERRUN_Pos) | (LIS_REG_CTRL3_I1_WTM_En << LIS_REG_CTRL3_I1_WTM_Pos));
+    i2c_write(TWIM1_BUS, LIS_REG_FIFO_CTRL_ADDR, (LIS_REG_FIFO_CTRL_FM_STREAM << LIS_REG_FIFO_CTRL_FM_Pos) | (LIS2DH12_FIFO_LEN << LIS_REG_FIFO_CTRL_FTH_Pos));
+    i2c_write(TWIM1_BUS, LIS_REG_FIFO_SRC_ADDR, (LIS_REG_FIFO_SRC_WTM_Enable << LIS_REG_FIFO_SRC_WTM_Pos) | (LIS_REG_FIFO_SRC_OVRN_FIFO_Enable << LIS_REG_FIFO_SRC_OVRN_FIFO_Pos) | (LIS_REG_FIFO_SRC_EMPTY_Enable << LIS_REG_FIFO_SRC_EMPTY_Pos));
+    i2c_write(TWIM1_BUS, LIS_REG_CTRL4_ADDR, LIS_REG_CTRL4_HR_12B << LIS_REG_CTRL4_HR_Pos);
+    i2c_write(TWIM1_BUS, LIS_REG_CTRL5_ADDR, LIS_REG_CTRL5_ADDR_FIFO_EN_Enable << LIS_REG_CTRL5_ADDR_FIFO_EN_Pos);
+    i2c_write(TWIM1_BUS, LIS_REG_CTRL1_ADDR, (LIS_REG_CTRL1_HR_12B << LIS_REG_CTRL1_HR_Pos) | (LIS_CTRL1_ODR_5376HZ << LIS_CTRL1_ODR_FIELD_OFFSET) | LIS_CTRL1_X_EN | LIS_CTRL1_Y_EN);
+    while (1);
     return 0;
 }
 
@@ -390,7 +403,14 @@ void GPIOTE_IRQHandler(void)
 {
     if (NRF_GPIOTE->EVENTS_IN[GPIOTE_INTENSET_IN0_Pos])
     {
-        lis2dh12_xy[0] = i2c_read(TWIM1_BUS, LIS_REG_OUT_X_ADDR);
-        lis2dh12_xy[1] = i2c_read(TWIM1_BUS, LIS_REG_OUT_Y_ADDR);
+        if((i2c_read(TWIM1_BUS, LIS_REG_FIFO_SRC_ADDR) >> LIS_REG_FIFO_SRC_WTM_Pos) & 1UL) {
+            lis2dh12_wtm_handler();
+        }
+        if((i2c_read(TWIM1_BUS, LIS_REG_FIFO_SRC_ADDR) >> LIS_REG_FIFO_SRC_OVRN_FIFO_Pos) & 1UL) {
+            __NOP();
+        }
+        if((i2c_read(TWIM1_BUS, LIS_REG_FIFO_SRC_ADDR) >> LIS_REG_FIFO_SRC_EMPTY_Pos) & 1UL) {
+            __NOP();
+        }
     }
 }
