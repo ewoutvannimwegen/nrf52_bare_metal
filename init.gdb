@@ -148,13 +148,17 @@ end
 #end
 
 
-hbreak accel.c:393
+hbreak accel.c:445
 commands
-printf "%d,%d\n", lis2dh12_xy[0], lis2dh12_xy[1]
+set $idx = 0
+while ($idx < 40)
+    printf "%d,%d,%d,%d\n", lis2dh12_xy[$idx], lis2dh12_xy[$idx+1], lis2dh12_xy[$idx+2], lis2dh12_xy[$idx+3]
+    set $idx = $idx + 4
+end
 continue
 end
 
-hbreak accel.c:393
+hbreak accel.c:445
 commands
 set $idx = 0
 printf "TWIM0->SX1509_RX_BUF: "

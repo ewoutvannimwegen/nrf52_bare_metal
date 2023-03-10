@@ -1,14 +1,14 @@
 #include "nrf52_bitfields.h"
 #include <nrf.h>
 
-#define UART_TX (6UL)
-#define UART_RX (8UL)
+#define UART_TX (2UL)
+#define UART_RX (4UL)
 #define BUT1 (13UL)
 #define LED1 (17UL)
 #define LED2 (18UL)
 #define LED3 (19UL)
 
-volatile static const uint8_t buf[] = {'H', 'e', 'l', 'l', 'o', ',', 'w', 'o', 'r', 'l', 'd', '!', '\r', '\n'};
+volatile static const uint8_t buf[] = {'p', 'e', 'l', 'l', 'o', ',', 'w', 'o', 'r', 'l', 'd', '!', '\r', '\n'};
 
 void uarte_endtx_handler(void)
 {
@@ -22,7 +22,7 @@ void uarte_endtx_handler(void)
 
 int main(void)
 {
-    NRF_CLOCK->TASKS_HFCLKSTART = 1;
+    NRF_CLOCK->TASKS_HFCLKSTART = 1; 
     while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0)
         ;
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
@@ -45,9 +45,9 @@ int main(void)
                            (UARTE_INTENSET_TXDRDY_Enabled << UARTE_INTENSET_TXDRDY_Pos) |
                            (UARTE_INTENSET_ENDTX_Enabled << UARTE_INTENSET_ENDTX_Pos);
     NRF_UARTE0->PSEL.TXD = UART_TX;
-    NRF_UARTE0->BAUDRATE = UARTE_BAUDRATE_BAUDRATE_Baud115200 << UARTE_BAUDRATE_BAUDRATE_Pos;
+    NRF_UARTE0->BAUDRATE = UARTE_BAUDRATE_BAUDRATE_Baud9600 << UARTE_BAUDRATE_BAUDRATE_Pos;
     NRF_UARTE0->CONFIG = (UARTE_CONFIG_HWFC_Disabled << UARTE_CONFIG_HWFC_Pos) |
-                         (UARTE_CONFIG_PARITY_Included << UARTE_CONFIG_PARITY_Pos);
+                         (UARTE_CONFIG_PARITY_Excluded << UARTE_CONFIG_PARITY_Pos);
 
     NVIC_EnableIRQ(UARTE0_UART0_IRQn);
     NRF_UARTE0->ENABLE = UARTE_ENABLE_ENABLE_Enabled << UARTE_ENABLE_ENABLE_Pos;
