@@ -65,6 +65,9 @@
 #define LIS_REG_CTRL5_ADDR_FIFO_EN_Enable  (1UL)
 #define LIS_REG_CTRL5_ADDR_FIFO_EN_Pos     (6UL)
 
+#define LIS_REG_CTRL2_FDS_En  (1UL)
+#define LIS_REG_CTRL2_FDS_Pos (3UL)
+
 #define LIS_REG_CTRL3_I1_ZYXDA_Pos   (4UL)
 #define LIS_REG_CTRL3_I1_ZYXDA_En    (1UL) 
 #define LIS_REG_CTRL3_I1_WTM_Pos     (2UL)
@@ -76,7 +79,11 @@
 #define LIS_REG_CTRL1_HR_12B (1UL)
 #define LIS_REG_CTRL4_HR_Pos (3UL)
 #define LIS_REG_CTRL4_HR_12B (1UL)
-
+#define LIS_REG_CTRL4_FS_Pos (4UL)
+#define LIS_REG_CTRL4_FS_2G 0b00
+#define LIS_REG_CTRL4_FS_4G 0b01
+#define LIS_REG_CTRL4_FS_8G 0b10
+#define LIS_REG_CTRL4_FS_16G 0b11
 
 /* WHO_AM_I Register Fields */
     /* WHO_AM_I -> WHO_AM_I */
@@ -105,7 +112,7 @@
       #define LIS_CTRL1_ODR_PWR_DWN                                0x00 /* Power-down mode */
       #define LIS_CTRL1_ODR_1HZ                                    0x01 /* HR/ Normal / Low-power mode (1 Hz) */
       #define LIS_CTRL1_ODR_10HZ                                   0x08 /* HR/ Normal / Low-power mode (10 Hz) */
-      #define LIS_CTRL1_ODR_25HZ                                   0x09 /* HR/ Normal / Low-power mode (25 Hz) */
+      #define LIS_CTRL1_ODR_25HZ                                   0b0011 /* HR/ Normal / Low-power mode (25 Hz) */
       #define LIS_CTRL1_ODR_50HZ                                   0x40 /* HR/ Normal / Low-power mode (50 Hz) */
       #define LIS_CTRL1_ODR_100HZ                                  0x41 /* HR/ Normal / Low-power mode (100 Hz) */
       #define LIS_CTRL1_ODR_200HZ                                  0x48 /* HR/ Normal / Low-power mode (200 Hz) */

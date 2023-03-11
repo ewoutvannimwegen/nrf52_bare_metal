@@ -173,14 +173,21 @@ end
 #printf "\n"
 #continue
 #end
-
-hbreak accel.c:155
+hbreak accel.c:245
 commands
 set $idx = 0
 while ($idx < 32)
     printf "%d, %d, %d, %d\n", lis2dh12_list[$idx].buffer[0], lis2dh12_list[$idx].buffer[1], lis2dh12_list[$idx].buffer[2], lis2dh12_list[$idx].buffer[3]
     set $idx=$idx+1
 end
+printf "NRF_TWIM0->TXD.AMOUNT: %d\n", NRF_TWIM0->TXD.AMOUNT
+printf "NRF_TWIM0->RXD.AMOUNT: %d\n", NRF_TWIM0->RXD.AMOUNT
+printf "TWIM0->EVENT_TXSTARTED: %d\n", NRF_TWIM0->EVENTS_TXSTARTED
+printf "TWIM0->EVENT_LASTTX: %d\n", NRF_TWIM0->EVENTS_LASTTX
+printf "TWIM0->EVENT_LASTRX: %d\n", NRF_TWIM0->EVENTS_LASTRX
+printf "TWIM0->EVENT_STOPPED: %d\n", NRF_TWIM0->EVENTS_STOPPED
+printf "NRF_GPIOTE->INTENSET_IN0: %d\n",  ((NRF_GPIOTE->INTENSET >> GPIOTE_INTENSET_IN0_Pos) & 1UL)
+printf "NRF_TWIM0->INTEN_STOPPED: %d\n", ((NRF_TWIM0->INTEN >> TWIM_INTEN_STOPPED_Pos) & 1UL)
 continue
 end
 

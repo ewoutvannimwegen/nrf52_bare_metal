@@ -14,7 +14,7 @@ typedef struct ArrayList {
 } ArrayList_Type;
 
 
-ArrayList_Type lis2dh12_list[LIS2DH12_I2C_BURST_LEN];
+volatile static ArrayList_Type lis2dh12_list[LIS2DH12_I2C_BURST_LEN];
 volatile static uint32_t lis2dh12_ptr;
 
 volatile static uint8_t lis2dh12_init_seq[] = {
