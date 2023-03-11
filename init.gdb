@@ -105,69 +105,82 @@ end
 #continue
 #end
 
-#hbreak accel.c:119
+#hbreak accel.c:107
 #commands
-#printf "GPIO->PIN_CNF[SDA]_DIR: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA] >> GPIO_PIN_CNF_DIR_Pos) & 1UL)
-#printf "GPIO->PIN_CNF[SDA]_INPUT: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA] >> GPIO_PIN_CNF_INPUT_Pos) & 1UL)
-#printf "GPIO->PIN_CNF[SDA]_DRIVE: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA] >> GPIO_PIN_CNF_DRIVE_Pos) & 7UL)
-#printf "GPIO->PIN_CNF[SCL]_DIR: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SCL] >> GPIO_PIN_CNF_DIR_Pos) & 1UL)
-#printf "GPIO->PIN_CNF[SCL]_INPUT: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SCL] >> GPIO_PIN_CNF_INPUT_Pos) & 1UL)
-#printf "GPIO->PIN_CNF[SCL]_DRIVE: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SCL] >> GPIO_PIN_CNF_DRIVE_Pos) & 7UL)
+#printf "GPIO->PIN_CNF[SDA_EXT]_DIR: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA_EXT] >> GPIO_PIN_CNF_DIR_Pos) & 1UL)
+#printf "GPIO->PIN_CNF[SDA_EXT]_INPUT: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA_EXT] >> GPIO_PIN_CNF_INPUT_Pos) & 1UL)
+#printf "GPIO->PIN_CNF[SDA_EXT]_DRIVE: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SDA_EXT] >> GPIO_PIN_CNF_DRIVE_Pos) & 7UL)
+#printf "GPIO->PIN_CNF[SCL_EXT]_DIR: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SCL_EXT] >> GPIO_PIN_CNF_DIR_Pos) & 1UL)
+#printf "GPIO->PIN_CNF[SCL_EXT]_INPUT: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SCL_EXT] >> GPIO_PIN_CNF_INPUT_Pos) & 1UL)
+#printf "GPIO->PIN_CNF[SCL_EXT]_DRIVE: %d\n", ((NRF_GPIO->PIN_CNF[PIN_SCL_EXT] >> GPIO_PIN_CNF_DRIVE_Pos) & 7UL)
 #printf "TWIM0->ENABLE: 0x%x\n", NRF_TWIM0->ENABLE
 #printf "TWIM0->FREQUENCY: 0x%x\n", NRF_TWIM0->FREQUENCY
-#printf "TWIM0->SHORTS_LASTTX_STARTRX: %d\n", ((NRF_TWIM0->SHORTS >> TWIM_SHORTS_LASTTX_STARTRX_Pos) & 1UL)
-#printf "TWIM0->SHORTS_LASTRX_STOP: %d\n", ((NRF_TWIM0->SHORTS >> TWIM_SHORTS_LASTRX_STOP_Pos) & 1UL)
+##printf "TWIM0->SHORTS_LASTTX_STARTRX: %d\n", ((NRF_TWIM0->SHORTS >> TWIM_SHORTS_LASTTX_STARTRX_Pos) & 1UL)
+##printf "TWIM0->SHORTS_LASTRX_STOP: %d\n", ((NRF_TWIM0->SHORTS >> TWIM_SHORTS_LASTRX_STOP_Pos) & 1UL)
 #printf "TWIM0->PSEL.SCL_CONNECT: %d\n", ((NRF_TWIM0->PSEL.SCL >> TWIM_PSEL_SCL_CONNECT_Pos) & 1UL) 
 #printf "TWIM0->PSEL.SDA_CONNECT: %d\n", ((NRF_TWIM0->PSEL.SDA >> TWIM_PSEL_SDA_CONNECT_Pos) & 1UL) 
 #printf "TWIM0->PSEL.SCL_PIN: %x\n", NRF_TWIM0->PSEL.SCL >> TWIM_PSEL_SCL_PIN_Pos
 #printf "TWIM0->PSEL.SDA_PIN: %x\n", NRF_TWIM0->PSEL.SDA >> TWIM_PSEL_SDA_PIN_Pos
 #printf "TWIM0->ADDRESS: 0x%x\n", NRF_TWIM0->ADDRESS
-#printf "TWIM0->TXD.PTR: 0x%x\n", NRF_TWIM0->TXD.PTR
-#printf "TWIM0->TXD.MAXCNT: %d\n", NRF_TWIM0->TXD.MAXCNT
-#printf "TWIM0->RXD.PTR: 0x%x\n", NRF_TWIM0->RXD.PTR
-#printf "TWIM0->RXD.MAXCNT: %d\n", NRF_TWIM0->RXD.MAXCNT
-#printf "TWIM0->INTENSET_STOPPED: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_STOPPED_Pos) & 1UL)
-#printf "TWIM0->INTENSET_ERROR: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_ERROR_Pos) & 1UL)
-#printf "TWIM0->INTENSET_SUSPENDED: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_SUSPENDED_Pos) & 1UL)
-#printf "TWIM0->INTENSET_RXSTARTED: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_RXSTARTED_Pos) & 1UL)
-#printf "TWIM0->INTENSET_TXSTARTED: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_TXSTARTED_Pos) & 1UL)
-#printf "TWIM0->INTENSET_LASTRX: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_LASTRX_Pos) & 1UL)
-#printf "TWIM0->INTENSET_LASTTX: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_LASTTX_Pos) & 1UL)
-#printf "TWIM0->EVENT_STOPPED: %d\n", NRF_TWIM0->EVENTS_STOPPED
-#printf "TWIM0->EVENT_ERROR: %d\n", NRF_TWIM0->EVENTS_ERROR
-#printf "TWIM0->EVENT_SUSPENDED: %d\n", NRF_TWIM0->EVENTS_SUSPENDED
-#printf "TWIM0->EVENT_RXSTARTED: %d\n", NRF_TWIM0->EVENTS_RXSTARTED
-#printf "TWIM0->EVENT_TXSTARTED: %d\n", NRF_TWIM0->EVENTS_TXSTARTED
-#printf "TWIM0->EVENT_LASTRX: %d\n", NRF_TWIM0->EVENTS_LASTRX
-#printf "TWIM0->EVENT_LASTTX: %d\n", NRF_TWIM0->EVENTS_LASTTX
+##printf "TWIM0->TXD.PTR: 0x%x\n", NRF_TWIM0->TXD.PTR
+##printf "TWIM0->TXD.MAXCNT: %d\n", NRF_TWIM0->TXD.MAXCNT
+##printf "TWIM0->RXD.PTR: 0x%x\n", NRF_TWIM0->RXD.PTR
+##printf "TWIM0->RXD.MAXCNT: %d\n", NRF_TWIM0->RXD.MAXCNT
+##printf "TWIM0->INTENSET_STOPPED: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_STOPPED_Pos) & 1UL)
+##printf "TWIM0->INTENSET_ERROR: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_ERROR_Pos) & 1UL)
+##printf "TWIM0->INTENSET_SUSPENDED: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_SUSPENDED_Pos) & 1UL)
+##printf "TWIM0->INTENSET_RXSTARTED: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_RXSTARTED_Pos) & 1UL)
+##printf "TWIM0->INTENSET_TXSTARTED: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_TXSTARTED_Pos) & 1UL)
+##printf "TWIM0->INTENSET_LASTRX: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_LASTRX_Pos) & 1UL)
+##printf "TWIM0->INTENSET_LASTTX: %d\n", ((NRF_TWIM0->INTENSET >> TWIM_INTENSET_LASTTX_Pos) & 1UL)
+##printf "TWIM0->EVENT_STOPPED: %d\n", NRF_TWIM0->EVENTS_STOPPED
+##printf "TWIM0->EVENT_ERROR: %d\n", NRF_TWIM0->EVENTS_ERROR
+##printf "TWIM0->EVENT_SUSPENDED: %d\n", NRF_TWIM0->EVENTS_SUSPENDED
+##printf "TWIM0->EVENT_RXSTARTED: %d\n", NRF_TWIM0->EVENTS_RXSTARTED
+##printf "TWIM0->EVENT_TXSTARTED: %d\n", NRF_TWIM0->EVENTS_TXSTARTED
+##printf "TWIM0->EVENT_LASTRX: %d\n", NRF_TWIM0->EVENTS_LASTRX #printf "TWIM0->EVENT_LASTTX: %d\n", NRF_TWIM0->EVENTS_LASTTX
 #continue
-#end #
-#hbreak accel.c:151
+#end 
+
+#hbreak accel.c:16
 #commands
+#printf "tx_buf: 0x%x, %d, 0x%x\n", tx_buf[0], tx_buf[1], &tx_buf[0]
+#printf "NRF_TWIM0->TXD.MAXCNT: %x\n", NRF_TWIM0->TXD.MAXCNT
+#printf "NRF_TWIM0->TXD.PTR: 0x%x\n", NRF_TWIM0->TXD.PTR
+#printf "NRF_TWIM0->SHORTS: %d\n", ((NRF_TWIM0->SHORTS >> TWIM_SHORTS_LASTTX_STOP_Pos) & 1UL)
+#printf "NRF_TWIM0->EVENTS_STOPPED: %x\n", NRF_TWIM0->EVENTS_STOPPED 
 #continue
 #end
 
+#hbreak accel.c:117
+#commands
+#set $idx = 0
+#while ($idx < 16)
+#    printf "0x%x ", lis2dh12_read_buf[$idx]
+#    set $idx=$idx+1
+#end
+#printf "\n"
+#continue
+#end
+#
+#hbreak accel.c:137
+#commands
+#set $idx = 0
+#while ($idx < 16)
+#    printf "0x%x ", lis2dh12_read_buf[$idx]
+#    set $idx=$idx+1
+#end
+#printf "\n"
+#continue
+#end
 
-hbreak accel.c:445
+hbreak accel.c:155
 commands
 set $idx = 0
-while ($idx < 40)
-    printf "%d,%d,%d,%d\n", lis2dh12_xy[$idx], lis2dh12_xy[$idx+1], lis2dh12_xy[$idx+2], lis2dh12_xy[$idx+3]
-    set $idx = $idx + 4
-end
-continue
-end
-
-hbreak accel.c:445
-commands
-set $idx = 0
-printf "TWIM0->SX1509_RX_BUF: "
-while ($idx < 16)
-    printf "0x%x ", sx1509_read_buf[$idx]
+while ($idx < 32)
+    printf "%d, %d, %d, %d\n", lis2dh12_list[$idx].buffer[0], lis2dh12_list[$idx].buffer[1], lis2dh12_list[$idx].buffer[2], lis2dh12_list[$idx].buffer[3]
     set $idx=$idx+1
 end
-printf "\n"
-printf "TWIM0->RXD.AMOUNT: %d\n", NRF_TWIM0->RXD.AMOUNT
 continue
 end
 
